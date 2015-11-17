@@ -1,5 +1,5 @@
 task :coffee do
-  `coffee --compile --output public/lib coffee/*`
+  system('coffee --compile --output public/lib coffee/*')
 end
 
 task :server do
