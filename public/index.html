@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KiraPata</title>
+  <script src="lib/jquery-2.1.4.js"></script>
+  <script src="lib/kirapata.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <a href="https://twitter.com/suna_pan/">@suna_pan</a>
+</div>
+
+<div class="main">
+  <h1>Kira・pata・shining ジェネレータ</h1>
+  <p>アイカツ！のKira・pata・shiningで登場したアレを作成します。<br>
+  お好きな画像でお試しください。</p>
+
+  <div id="config_area">
+    <p>分身の数：<br>
+    <select id="rep_count" >
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+    </select></p>
+    <p>x方向変化量：<br>
+    <select id="delta_x" >
+      <option value="40">40</option>
+      <option value="60">60</option>
+      <option value="80">80</option>
+      <option value="100">100</option>
+      <option value="120">120</option>
+      <option value="160">160</option>
+      <option value="200">200</option>
+      <option value="250">250</option>
+      <option value="300">300</option>
+    </select></p>
+    <p>色相変化量：<br>
+    <select id="delta_h" >
+      <option value="5">5</option>
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+      <option value="45">45</option>
+      <option value="60">60</option>
+      <option value="80">80</option>
+      <option value="120">120</option>
+    </select></p>
+    <input id="right" type="checkbox" value="右から">右から
+    <p>ファイルを選択</p>
+    <input id="selectFile" name="image" type="file" /><br>
+    <button id="process" type=button>実行</button> 
+  </div>
+  <hr>
+  <div id="draw_area">
+    <img id="result_image" src="" />
+    <canvas id="tmp_canvas"></canvas>
+    <canvas id="res_canvas"></canvas>
+  </div>
+
+</div>
+
+
+</body>
+</html>
