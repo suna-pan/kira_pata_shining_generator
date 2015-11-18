@@ -7,11 +7,13 @@ $ ->
   f_delta_x = $('#delta_x')
   f_delta_y = $('#delta_y')
   f_delta_h = $('#delta_h')
+  f_scale = $('#scale')
   f_right = $('#right')
 
   f_rep_cnt.val('5')
   f_delta_x.val('80')
   f_delta_y.val('0')
+  f_scale.val('1')
   f_delta_h.val('30')
 
   tmp_canvas = $('#tmp_canvas')
@@ -23,18 +25,21 @@ $ ->
   tmp_canvas.hide()
   res_canvas.hide()
 
-  draw_res = (x, y, w, h, image_data) ->
+  draw_res = (x, y, w, h, image_data, s) ->
 
     res_image = res_ctx.getImageData(x, y, w, h)
 
     for yy in [0..h]
       for xx in [0..w]
-        idx = (w * yy + xx) * 4
-        continue if image_data.data[idx + 3] != 255
-        res_image.data[idx + 0] = image_data.data[idx + 0]
-        res_image.data[idx + 1] = image_data.data[idx + 1]
-        res_image.data[idx + 2] = image_data.data[idx + 2]
-        res_image.data[idx + 3] = image_data.data[idx + 3]
+        xxx = Math.round(xx * s)
+        yyy = Math.round(yy * s)
+        idx1 = (w * yy + xx) * 4
+        idx2 = (w * yyy + xxx) * 4
+        continue if image_data.data[idx1 + 3] != 255
+        res_image.data[idx2 + 0] = image_data.data[idx1 + 0]
+        res_image.data[idx2 + 1] = image_data.data[idx1 + 1]
+        res_image.data[idx2 + 2] = image_data.data[idx1 + 2]
+        res_image.data[idx2 + 3] = image_data.data[idx1 + 3]
 
     res_ctx.putImageData(res_image, x, y)
 
@@ -133,11 +138,9 @@ $ ->
     delta_y = parseInt(f_delta_y.val(), 10)
     delta_h = parseInt(f_delta_h.val(), 10)
     right = f_right.prop('checked')
+    scale = parseFloat(f_scale.val(), 10)
 
     delta_y = -delta_y if right
-
-    draw_y = 0
-    draw_y = (rep_cnt - 1) * Math.abs(delta_y) if delta_y < 0
 
     return unless file.type.match(/^image\/(png|jpeg|jpg|gif)$/)
 
@@ -150,7 +153,11 @@ $ ->
 
         w = this.width
         h = this.height
-        rw = w + (rep_cnt - 1) * delta_x
+
+        rw = w * Math.pow(scale, rep_cnt - 1)
+        for i in [1..(rep_cnt - 1)]
+          s = Math.pow(scale, i)
+          rw += s * delta_x + (w * Math.pow(scale, i - 1) - w * s)
         rh = h + (rep_cnt - 1) * Math.abs(delta_y)
 
         tmp_canvas.attr('width', w)
@@ -160,20 +167,23 @@ $ ->
         res_canvas.attr('height', rh)
 
         tmp_ctx.drawImage(image, 0, 0)
-       
+     
+        draw_x = 0
+        draw_x = rw - w * Math.pow(scale, (rep_cnt - 1)) if right
+        draw_y = 0
+        draw_y = (rep_cnt - 1) * Math.abs(delta_y) if delta_y < 0
         for i in [0...(rep_cnt - 1)]
-          i = (rep_cnt - 1) - i if right
           image_data = tmp_ctx.getImageData(0, 0, w, h)
-
-          dh = i if right
-          dh = rep_cnt - 1 - i if !right
+          dh = rep_cnt - 1 - i
+          s = Math.pow(scale, dh)
           img = proc_image(w, h, image_data, delta_h * dh)
-          draw_res(i * delta_x, draw_y, w, h, img)
+          draw_res(draw_x, draw_y, w, h, img, s)
+          draw_x += delta_x * s if !right
+          draw_x += (w * s - delta_x * s) - w * Math.pow(scale, dh - 1) if right
           draw_y += delta_y
 
         image_data = tmp_ctx.getImageData(0, 0, w, h)
-        draw_res((rep_cnt - 1) * delta_x, draw_y, w, h, image_data) if !right
-        draw_res(0, draw_y, w, h, image_data) if right
+        draw_res(draw_x, draw_y, w, h, image_data, 1)
 
         png = res_canvas.get(0).toDataURL()
         result.attr('width', rw)
