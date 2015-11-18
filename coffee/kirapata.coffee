@@ -5,11 +5,13 @@ $ ->
 
   f_rep_cnt = $('#rep_count')
   f_delta_x = $('#delta_x')
+  f_delta_y = $('#delta_y')
   f_delta_h = $('#delta_h')
   f_right = $('#right')
 
   f_rep_cnt.val('5')
   f_delta_x.val('80')
+  f_delta_y.val('0')
   f_delta_h.val('30')
 
   tmp_canvas = $('#tmp_canvas')
@@ -21,20 +23,20 @@ $ ->
   tmp_canvas.hide()
   res_canvas.hide()
 
-  draw_res = (x, w, h, image_data) ->
+  draw_res = (x, y, w, h, image_data) ->
 
-    res_image = res_ctx.getImageData(x, 0, w, h)
+    res_image = res_ctx.getImageData(x, y, w, h)
 
-    for y in [0..h]
+    for yy in [0..h]
       for xx in [0..w]
-        idx = (w * y + xx) * 4
+        idx = (w * yy + xx) * 4
         continue if image_data.data[idx + 3] != 255
         res_image.data[idx + 0] = image_data.data[idx + 0]
         res_image.data[idx + 1] = image_data.data[idx + 1]
         res_image.data[idx + 2] = image_data.data[idx + 2]
         res_image.data[idx + 3] = image_data.data[idx + 3]
 
-    res_ctx.putImageData(res_image, x, 0)
+    res_ctx.putImageData(res_image, x, y)
 
 
   rgb_to_hsv = (rgb) ->
@@ -128,8 +130,14 @@ $ ->
 
     rep_cnt = parseInt(f_rep_cnt.val(), 10)
     delta_x = parseInt(f_delta_x.val(), 10)
+    delta_y = parseInt(f_delta_y.val(), 10)
     delta_h = parseInt(f_delta_h.val(), 10)
     right = f_right.prop('checked')
+
+    delta_y = -delta_y if right
+
+    draw_y = 0
+    draw_y = (rep_cnt - 1) * Math.abs(delta_y) if delta_y < 0
 
     return unless file.type.match(/^image\/(png|jpeg|jpg|gif)$/)
 
@@ -143,12 +151,13 @@ $ ->
         w = this.width
         h = this.height
         rw = w + (rep_cnt - 1) * delta_x
+        rh = h + (rep_cnt - 1) * Math.abs(delta_y)
 
         tmp_canvas.attr('width', w)
         tmp_canvas.attr('height', h)
 
         res_canvas.attr('width', rw)
-        res_canvas.attr('height', h)
+        res_canvas.attr('height', rh)
 
         tmp_ctx.drawImage(image, 0, 0)
        
@@ -159,15 +168,16 @@ $ ->
           dh = i if right
           dh = rep_cnt - 1 - i if !right
           img = proc_image(w, h, image_data, delta_h * dh)
-          draw_res(i * delta_x, w, h, img)
+          draw_res(i * delta_x, draw_y, w, h, img)
+          draw_y += delta_y
 
         image_data = tmp_ctx.getImageData(0, 0, w, h)
-        draw_res((rep_cnt - 1) * delta_x, w, h, image_data) if !right
-        draw_res(0, w, h, image_data) if right
+        draw_res((rep_cnt - 1) * delta_x, draw_y, w, h, image_data) if !right
+        draw_res(0, draw_y, w, h, image_data) if right
 
         png = res_canvas.get(0).toDataURL()
         result.attr('width', rw)
-        result.attr('height', h)
+        result.attr('height', rh)
         result.attr('src', png)
         result.show()
 
